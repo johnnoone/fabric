@@ -6,10 +6,12 @@ import os
 import sys
 import textwrap
 from traceback import format_exc
+import six
+from fabric import compat
 
 
 def _encode(msg, stream):
-    if isinstance(msg, unicode) and hasattr(stream, 'encoding') and not stream.encoding is None:
+    if isinstance(msg, six.text_type) and getattr(stream, 'encoding', None):
         return msg.encode(stream.encoding)
     else:
         return str(msg)
@@ -47,7 +49,8 @@ def abort(msg):
         from colors import red
 
     if output.aborts:
-        sys.stderr.write(red("\nFatal error: %s\n" % _encode(msg, sys.stderr)))
+        # msg = _encode(msg, sys.stderr)
+        sys.stderr.write(red("\nFatal error: %s\n" % msg))
         sys.stderr.write(red("\nAborting.\n"))
 
     if env.abort_exception:
@@ -78,9 +81,13 @@ def warn(msg):
     else:
         from colors import magenta
 
+    # if output.warnings:
+    #     msg = _encode(msg, sys.stderr)
+    #     sys.stderr.write(magenta("\nWarning: %s\n\n" % msg))
+
     if output.warnings:
-        msg = _encode(msg, sys.stderr)
-        sys.stderr.write(magenta("\nWarning: %s\n\n" % msg))
+        d = "\nWarning: %s\n\n" % msg
+        sys.stderr.write(magenta(d))
 
 
 def indent(text, spaces=4, strip=False):
@@ -97,7 +104,7 @@ def indent(text, spaces=4, strip=False):
     """
     # Normalize list of strings into a string for dedenting. "list" here means
     # "not a string" meaning "doesn't have splitlines". Meh.
-    if not hasattr(text, 'splitlines'):
+    with compat.suppress(TypeError):
         text = '\n'.join(text)
     # Dedent if requested
     if strip:

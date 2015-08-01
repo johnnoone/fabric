@@ -29,19 +29,19 @@ def test_warn():
 
 
 def test_indent():
-    for description, input, output in (
+    for description, input_, output_ in (
         ("Sanity check: 1 line string",
             'Test', '    Test'),
         ("List of strings turns in to strings joined by \\n",
             ["Test", "Test"], '    Test\n    Test'),
     ):
         eq_.description = "indent(): %s" % description
-        yield eq_, indent(input), output
+        yield eq_, indent(input), output_
         del eq_.description
 
 
 def test_indent_with_strip():
-    for description, input, output in (
+    for description, input_, output_ in (
         ("Sanity check: 1 line string",
             indent('Test', strip=True), '    Test'),
         ("Check list of strings",
@@ -51,7 +51,7 @@ def test_indent_with_strip():
             '    Test\n    Test'),
     ):
         eq_.description = "indent(strip=True): %s" % description
-        yield eq_, input, output
+        yield eq_, input_, output_
         del eq_.description
 
 

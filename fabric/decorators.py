@@ -7,6 +7,7 @@ import types
 from functools import wraps
 
 from Crypto import Random
+import six
 
 from fabric import tasks
 from .context_managers import settings
@@ -53,7 +54,7 @@ def _list_annotating_decorator(attribute, *values):
             return func(*args, **kwargs)
         _values = values
         # Allow for single iterable argument as well as *args
-        if len(_values) == 1 and not isinstance(_values[0], basestring):
+        if len(_values) == 1 and not isinstance(_values[0], six.string_types):
             _values = _values[0]
         setattr(inner_decorator, attribute, list(_values))
         # Don't replace @task new-style task objects with inner_decorator by
@@ -130,7 +131,7 @@ def runs_once(func):
     Any function wrapped with this decorator will silently fail to execute the
     2nd, 3rd, ..., Nth time it is called, and will return the value of the
     original run.
-    
+
     .. note:: ``runs_once`` does not work with parallel task execution.
     """
     @wraps(func)
@@ -169,7 +170,7 @@ def parallel(pool_size=None):
 
     .. versionadded:: 1.3
     """
-    called_without_args = type(pool_size) == types.FunctionType
+    called_without_args = isinstance(pool_size, types.FunctionType)
 
     def real_decorator(func):
         @wraps(func)

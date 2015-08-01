@@ -33,7 +33,7 @@ if sys.version_info[:2] < (2, 6):
     install_requires=['paramiko>=1.10,<1.13']
 else:
     install_requires=['paramiko>=1.10']
-
+install_requires.append('six')
 
 setup(
     name='Fabric',

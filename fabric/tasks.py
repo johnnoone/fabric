@@ -5,6 +5,7 @@ import inspect
 import sys
 import textwrap
 
+from fabric import compat
 from fabric import state
 from fabric.utils import abort, warn, error
 from fabric.network import to_dict, normalize_to_string, disconnect_all
@@ -122,7 +123,7 @@ class Task(object):
         # from the CLI or from module-level code). This will be the empty list
         # if these have not been set -- which is fine, this method should
         # return an empty list if no hosts have been set anywhere.
-        env_vars = map(_get_list(env), "hosts roles exclude_hosts".split())
+        env_vars = compat.map(_get_list(env), "hosts roles exclude_hosts".split())
         env_vars.append(roledefs)
         return merge(*env_vars), env.get('roles', [])
 
@@ -200,7 +201,7 @@ def requires_parallel(task):
 
 
 def _parallel_tasks(commands_to_run):
-    return any(map(
+    return any(compat.map(
         lambda x: requires_parallel(crawl(x[0], state.commands)),
         commands_to_run
     ))
@@ -240,7 +241,7 @@ def _execute(task, host, my_env, args, kwargs, jobs, queue, multiprocessing):
             try:
                 state.connections.clear()
                 submit(task.run(*args, **kwargs))
-            except BaseException, e: # We really do want to capture everything
+            except BaseException as e: # We really do want to capture everything
                 # SystemExit implies use of abort(), which prints its own
                 # traceback, host info etc -- so we don't want to double up
                 # on that. For everything else, though, we need to make
@@ -386,7 +387,7 @@ def execute(task, *args, **kwargs):
                     task, host, my_env, args, new_kwargs, jobs, queue,
                     multiprocessing
                 )
-            except NetworkError, e:
+            except NetworkError as e:
                 results[host] = e
                 # Backwards compat test re: whether to use an exception or
                 # abort
@@ -410,7 +411,7 @@ def execute(task, *args, **kwargs):
             # This prevents Fabric from continuing on to any other tasks.
             # Otherwise, pull in results from the child run.
             ran_jobs = jobs.run()
-            for name, d in ran_jobs.iteritems():
+            for name, d in ran_jobs.items():
                 if d['exit_code'] != 0:
                     if isinstance(d['results'], NetworkError) and \
                             _is_network_error_ignored():

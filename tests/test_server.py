@@ -11,6 +11,7 @@ __test__ = False
 from nose.tools import eq_, ok_
 
 from fabric.network import ssh
+from fabric import compat
 
 from server import FakeSFTPServer
 
@@ -91,7 +92,7 @@ def test_list_folder():
         # not "no files found"
         ok_(results != ssh.SFTP_NO_SUCH_FILE)
         # Grab filename from SFTPAttribute objects in result
-        output = map(lambda x: x.filename, results)
+        output = compat.map(lambda x: x.filename, results)
         # Yield test generator
         eq_.description = "list_folder: %s" % desc
         yield eq_, set(expected), set(output)

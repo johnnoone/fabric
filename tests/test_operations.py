@@ -1,7 +1,7 @@
 from __future__ import with_statement
 
 from contextlib import nested
-from StringIO import StringIO
+import six
 
 from nose.tools import ok_
 from fudge import with_fakes, Fake
@@ -13,7 +13,7 @@ from fabric.operations import require, prompt, _sudo_prefix, _shell_wrap, \
     _shell_escape
 from fabric.api import get, put, hide, show, cd, lcd, local, run, sudo, quiet
 from fabric.exceptions import CommandTimeout
-
+from fabric import compat
 from fabric.decorators import with_settings
 from utils import *
 from server import (server, PORT, RESPONSES, FILES, PASSWORDS, CLIENT_PRIVKEY,
@@ -478,7 +478,7 @@ class TestFileTransfers(FabricTest):
         """
         with hide('everything'):
             get('tree', self.tmpdir)
-        leaves = filter(lambda x: x[0].startswith('/tree'), FILES.items())
+        leaves = compat.filter(lambda x: x[0].startswith('/tree'), FILES.items())
         for path, contents in leaves:
             eq_contents(self.path(path[1:]), contents)
 
@@ -491,7 +491,7 @@ class TestFileTransfers(FabricTest):
         try:
             with hide('everything'):
                 get('tree')
-            leaves = filter(lambda x: x[0].startswith('/tree'), FILES.items())
+            leaves = compat.filter(lambda x: x[0].startswith('/tree'), FILES.items())
             for path, contents in leaves:
                 path = os.path.join(dirname, path[1:])
                 eq_contents(path, contents)
@@ -528,7 +528,7 @@ class TestFileTransfers(FabricTest):
     @mock_streams('stderr')
     def _invalid_file_obj_situations(self, remote_path):
         with settings(hide('running'), warn_only=True):
-            get(remote_path, StringIO())
+            get(remote_path, six.StringIO())
         assert_contains('is a glob or directory', sys.stderr.getvalue())
 
     def test_glob_and_file_object_invalid(self):
@@ -596,7 +596,7 @@ class TestFileTransfers(FabricTest):
     @server(port=2201)
     def test_get_from_multiple_servers(self):
         ports = [2200, 2201]
-        hosts = map(lambda x: '127.0.0.1:%s' % x, ports)
+        hosts = compat.map(lambda x: '127.0.0.1:%s' % x, ports)
         with settings(all_hosts=hosts):
             for port in ports:
                 with settings(
@@ -661,7 +661,7 @@ class TestFileTransfers(FabricTest):
         """
         get()'s local_path arg should take file-like objects too
         """
-        fake_file = StringIO()
+        fake_file = six.StringIO()
         target = '/file.txt'
         with hide('everything'):
             get(target, fake_file)
@@ -692,15 +692,15 @@ class TestFileTransfers(FabricTest):
         with hide('everything'):
             retval = get('tree', d)
         files = ['file1.txt', 'file2.txt', 'subfolder/file3.txt']
-        eq_(map(lambda x: os.path.join(d, 'tree', x), files), retval)
+        eq_(compat.map(lambda x: os.path.join(d, 'tree', x), files), retval)
 
     @server()
-    def test_get_returns_none_for_stringio(self):
+    def test_get_returns_none_for_StringIO(self):
         """
         get() should return None if local_path is a StringIO
         """
         with hide('everything'):
-            eq_([], get('/file.txt', StringIO()))
+            eq_([], get('/file.txt', six.StringIO()))
 
     @server()
     def test_get_return_value_failed_attribute(self):
@@ -843,7 +843,7 @@ class TestFileTransfers(FabricTest):
         put()'s local_path arg should take file-like objects too
         """
         local = self.path('whatever')
-        fake_file = StringIO()
+        fake_file = six.StringIO()
         fake_file.write("testing file-like objects in put()")
         pointer = fake_file.tell()
         target = '/new_file.txt'
@@ -876,13 +876,13 @@ class TestFileTransfers(FabricTest):
         eq_(retval, [p])
 
     @server()
-    def test_put_returns_list_of_remote_paths_with_stringio(self):
+    def test_put_returns_list_of_remote_paths_with_StringIO(self):
         """
         put() should return a one-item iterable when uploading from a StringIO
         """
         f = 'uploaded.txt'
         with hide('everything'):
-            eq_(put(StringIO('contents'), f), [f])
+            eq_(put(six.StringIO('contents'), f), [f])
 
     @server()
     def test_put_return_value_failed_attribute(self):
@@ -890,7 +890,7 @@ class TestFileTransfers(FabricTest):
         put()'s return value should indicate any paths which failed to upload.
         """
         with settings(hide('everything'), warn_only=True):
-            f = StringIO('contents')
+            f = six.StringIO('contents')
             retval = put(f, '/nonexistent/directory/structure')
         eq_(["<StringIO>"], retval.failed)
         assert not retval.succeeded
@@ -1046,7 +1046,7 @@ class TestFileTransfers(FabricTest):
     @server()
     @mock_streams('stdout')
     def test_stringio_without_name(self):
-        file_obj = StringIO(u'test data')
+        file_obj = six.StringIO(u'test data')
         put(file_obj, '/')
         assert re.search('<file obj>', sys.stdout.getvalue())
 
@@ -1054,7 +1054,7 @@ class TestFileTransfers(FabricTest):
     @mock_streams('stdout')
     def test_stringio_with_name(self):
         """If a file object (StringIO) has a name attribute, use that in output"""
-        file_obj = StringIO(u'test data')
+        file_obj = six.StringIO(u'test data')
         file_obj.name = 'Test StringIO Object'
         put(file_obj, '/')
         assert re.search(file_obj.name, sys.stdout.getvalue())

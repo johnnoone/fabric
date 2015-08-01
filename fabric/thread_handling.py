@@ -1,5 +1,6 @@
 import threading
 import sys
+import six
 
 
 class ThreadHandler(object):
@@ -22,4 +23,4 @@ class ThreadHandler(object):
     def raise_if_needed(self):
         if self.exception:
             e = self.exception
-            raise e[0], e[1], e[2]
+            six.reraise(*e)

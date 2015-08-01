@@ -14,7 +14,9 @@ import sys
 import time
 from glob import glob
 from contextlib import closing, contextmanager
+from six.moves import input
 
+from fabric import compat
 from fabric.context_managers import (settings, char_buffered, hide,
     quiet as quiet_manager, warn_only as warn_only_manager)
 from fabric.io import output_loop, input_loop
@@ -96,7 +98,7 @@ def require(*keys, **kwargs):
         Allow iterable ``provided_by`` values instead of just single values.
     """
     # If all keys exist and are non-empty, we're good, so keep going.
-    missing_keys = filter(lambda x: x not in env or (x in env and
+    missing_keys = compat.filter(lambda x: x not in env or (x in env and
         isinstance(env[x], (dict, list, tuple, set)) and not env[x]), keys)
     if not missing_keys:
         return
@@ -212,7 +214,7 @@ def prompt(text, key=None, default='', validate=None):
     value = None
     while value is None:
         # Get input
-        value = raw_input(prompt_str) or default
+        value = input(prompt_str) or default
         # Handle validation
         if validate:
             # Callable
@@ -221,7 +223,7 @@ def prompt(text, key=None, default='', validate=None):
                 # fails.
                 try:
                     value = validate(value)
-                except Exception, e:
+                except Exception as e:
                     # Reset value so we stay in the loop
                     value = None
                     print("Validation failed for the following reason:")
@@ -399,7 +401,7 @@ def put(local_path=None, remote_path=None, use_sudo=False,
                     p = ftp.put(lpath, remote_path, use_sudo, mirror_local_mode,
                         mode, local_is_path, temp_dir)
                     remote_paths.append(p)
-            except Exception, e:
+            except Exception as e:
                 msg = "put() encountered an exception while uploading '%s'"
                 failure = lpath if local_is_path else "<StringIO>"
                 failed_local_paths.append(failure)
@@ -586,7 +588,7 @@ def get(remote_path, local_path=None, use_sudo=False, temp_dir=""):
                     if local_is_path:
                         local_files.append(result)
 
-        except Exception, e:
+        except Exception as e:
             failed_remote_files.append(remote_path)
             msg = "get() encountered an exception while downloading '%s'"
             error(message=msg % remote_path, exception=e)
@@ -709,7 +711,7 @@ def _prefix_env_vars(command, local=False):
 
         exports = ' '.join(
             '%s%s="%s"' % (set_cmd, k, v if k == 'PATH' else _shell_escape(v))
-            for k, v in env_vars.iteritems()
+            for k, v in env_vars.items()
         )
         shell_env_str = '%s%s && ' % (exp_cmd, exports)
     else:
@@ -1010,7 +1012,7 @@ def run(command, shell=True, pty=True, combine_stderr=None, quiet=False,
     standard error to the local standard out, while preserving it as its own
     distinct attribute on the return value (as per above.) Alternately, you
     could even provide your own stream objects or loggers, e.g. ``myout =
-    StringIO(); run("command", stdout=myout)``.
+    six.StringIO(); run("command", stdout=myout)``.
 
     If you want an exception raised when the remote program takes too long to
     run, specify ``timeout=N`` where ``N`` is an integer number of seconds,

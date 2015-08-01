@@ -33,10 +33,11 @@ Context managers for use with the ``with`` statement.
     ``nested`` itself -- see its API doc for details.
 """
 
-from contextlib import contextmanager, nested
+from contextlib import contextmanager
 import socket
 import select
 
+from fabric import compat
 from fabric.thread_handling import ThreadHandler
 from fabric.state import output, win32, connections, env
 from fabric import state
@@ -45,7 +46,6 @@ from fabric.utils import isatty
 if not win32:
     import termios
     import tty
-
 
 def _set_output(groups, which):
     """
@@ -132,7 +132,7 @@ def _setenv(variables):
     clean_revert = variables.pop('clean_revert', False)
     previous = {}
     new = []
-    for key, value in variables.iteritems():
+    for key, value in variables.items():
         if key in state.env:
             previous[key] = state.env[key]
         else:
@@ -142,7 +142,7 @@ def _setenv(variables):
         yield
     finally:
         if clean_revert:
-            for key, value in variables.iteritems():
+            for key, value in variables.items():
                 # If the current env value for this key still matches the
                 # value we set it to beforehand, we are OK to revert it to the
                 # pre-block value.
@@ -240,7 +240,7 @@ def settings(*args, **kwargs):
     managers = list(args)
     if kwargs:
         managers.append(_setenv(kwargs))
-    return nested(*managers)
+    return compat.nested(*managers)
 
 
 def cd(path):
@@ -532,21 +532,23 @@ def remote_tunnel(remote_port, local_port=None, local_host="localhost",
     channels = []
     threads = []
 
-    def accept(channel, (src_addr, src_port), (dest_addr, dest_port)):
+    def accept(channel, src, dest):
+        src_addr, src_port = src
+        dest_addr, dest_port = dest
         channels.append(channel)
         sock = socket.socket()
         sockets.append(sock)
 
         try:
             sock.connect((local_host, local_port))
-        except Exception, e:
-            print "[%s] rtunnel: cannot connect to %s:%d (from local)" % (env.host_string, local_host, local_port)
+        except Exception as e:
+            print("[%s] rtunnel: cannot connect to %s:%d (from local)" % (env.host_string, local_host, local_port))
             channel.close()
             return
 
-        print "[%s] rtunnel: opened reverse tunnel: %r -> %r -> %r"\
+        print("[%s] rtunnel: opened reverse tunnel: %r -> %r -> %r"\
               % (env.host_string, channel.origin_addr,
-                 channel.getpeername(), (local_host, local_port))
+                 channel.getpeername(), (local_host, local_port)))
 
         th = ThreadHandler('fwd', _forwarder, channel, sock)
         threads.append(th)

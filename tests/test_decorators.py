@@ -7,7 +7,7 @@ from nose.tools import eq_, ok_, assert_true, assert_false, assert_equal
 import fudge
 from fudge import Fake, with_fakes, patched_context
 
-from fabric import decorators, tasks
+from fabric import compat, decorators, tasks
 from fabric.state import env
 import fabric # for patching fabric.state.xxx
 from fabric.tasks import _parallel_tasks, requires_parallel, execute
@@ -189,7 +189,7 @@ fake_tasks = {
 }
 
 def parallel_task_helper(actual_tasks, expected):
-    commands_to_run = map(lambda x: [x], actual_tasks)
+    commands_to_run = compat.map(lambda x: [x], actual_tasks)
     with patched_context(fabric.state, 'commands', fake_tasks):
         eq_(_parallel_tasks(commands_to_run), expected)
 

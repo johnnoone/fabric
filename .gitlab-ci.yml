@@ -1,0 +1,32 @@
+before_script:
+  - apt install openssh-client openssh-server
+  - ssh-keygen -f ~/.ssh/id_rsa -N ""
+  - cp ~/.ssh/{id_rsa.pub,authorized_keys}
+  - eval $(ssh-agent)
+  - ssh-add
+  - pip install -e .
+  - pip install -r requirements.txt
+
+unit test 2.7:
+  script:
+    - fab test
+  tags:
+    - python2.7
+
+unit test 3.4:
+  script:
+    - fab test
+  tags:
+    - python3.4
+
+integration test 2.7:
+  script:
+    - fab -H localhost test:"--tests\=integration"
+  tags:
+    - python2.7
+
+integration test 3.4:
+  script:
+    - fab -H localhost test:"--tests\=integration"
+  tags:
+    - python3.4

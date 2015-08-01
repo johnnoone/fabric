@@ -13,6 +13,7 @@ from fabric.main import display_command
 from fabric.api import run, env, settings, hosts, roles, hide, parallel, task, runs_once, serial
 from fabric.network import from_dict
 from fabric.exceptions import NetworkError
+from fabric import compat
 
 from utils import eq_, FabricTest, aborts, mock_streams
 from server import server
@@ -167,7 +168,7 @@ def dict_contains(superset, subset):
     """
     Assert that all key/val pairs in dict 'subset' also exist in 'superset'
     """
-    for key, value in subset.iteritems():
+    for key, value in subset.items():
         ok_(key in superset)
         eq_(superset[key], value)
 
@@ -353,7 +354,7 @@ class TestExecute(FabricTest):
         Networked but serial tasks should return per-host-string dict
         """
         ports = [2200, 2201]
-        hosts = map(lambda x: '127.0.0.1:%s' % x, ports)
+        hosts = compat.map(lambda x: '127.0.0.1:%s' % x, ports)
         def task():
             run("ls /simple")
             return "foo"
@@ -567,9 +568,9 @@ class TestTaskDetails(unittest.TestCase):
 """Displaying detailed information for task 'mytask':
 
     This is a multi line docstring.
-    
+
     For reals.
-    
+
     Arguments: arg1
 
 """

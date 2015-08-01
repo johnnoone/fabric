@@ -7,7 +7,7 @@ items, though within Fabric itself only ``Process`` objects are used/supported.
 
 from __future__ import with_statement
 import time
-import Queue
+from six.moves import queue
 from multiprocessing import Process
 
 from fabric.state import env
@@ -18,7 +18,7 @@ from fabric.context_managers import settings
 class JobQueue(object):
     """
     The goal of this class is to make a queue of processes to run, and go
-    through them running X number at any given time. 
+    through them running X number at any given time.
 
     So if the bubble is 5 start with 5 running and move the bubble of running
     procs along the queue looking something like this:
@@ -31,7 +31,7 @@ class JobQueue(object):
         __________________[~~~~~]..
         ____________________[~~~~~]
         ___________________________
-                                End 
+                                End
     """
     def __init__(self, max_running, comms_queue):
         """
@@ -190,7 +190,7 @@ class JobQueue(object):
             try:
                 datum = self._comms_queue.get_nowait()
                 results[datum['name']]['results'] = datum['result']
-            except Queue.Empty:
+            except queue.Empty:
                 break
 
 
@@ -215,8 +215,8 @@ def try_using(parallel_type):
         from threading import Thread as Bucket
 
     # Make a job_queue with a bubble of len 5, and have it print verbosely
-    queue = Queue.Queue()
-    jobs = JobQueue(5, queue)
+    my_queue = queue.Queue()
+    jobs = JobQueue(5, my_queue)
     jobs._debug = True
 
     # Add 20 procs onto the stack
